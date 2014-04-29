@@ -4,6 +4,18 @@ function h(aString) {
 	return String(aString).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;').split("'").join('&apos;').split("\\").join('');
 };
 
+function categoryIsRTL(aCategory) {
+	if (
+		aCategory.indexOf('World/Arabic') != -1 ||
+		aCategory.indexOf('World/Persian') != -1 ||
+		aCategory.indexOf('World/Hebrew') != -1 ||
+		aCategory.indexOf('International/Arabic') != -1 ||
+		aCategory.indexOf('International/Persian') != -1 ||
+		aCategory.indexOf('International/Hebrew') != -1)
+		return true;
+	else
+		return false;
+}
 function openURL(url, selected) {
 
 	if (url.indexOf("http://") === 0 || url.indexOf("https://") === 0) {
@@ -27,11 +39,21 @@ function cleanURL(aString) {
 	return aString
 }
 
-//localStorage.clear(); DEBUG
+Encoder.EncodeType = "numerical";
+function searchBug(aString) {
+	return Encoder.htmlEncode(aString);
+}
+
+var version = new Date().getDay()
+if(localStorage['extension-version'] != version) {
+	localStorage.clear();
+	localStorage['extension-version'] = version
+}
 
 var cache = localStorage;
 
 function search(searchTerm) {
+
 	searchTerm = cleanSearchTerm(searchTerm);
 	if (cache[searchTerm]) {
 		popup(JSON.parse(cache[searchTerm]), searchTerm)
@@ -41,7 +63,7 @@ function search(searchTerm) {
 		$.ajax({
 			type: 'GET',
 			dataType: 'html',
-			url: 'http://www.dmoz.org/search?q=' + encodeURIComponent(searchTerm),
+			url: 'http://www.dmoz.org/search?q=' + encodeURIComponent(searchBug(searchTerm)),
 			success: function (aData) {
 				cache[searchTerm] = JSON.stringify(parse(aData));
 				popup(JSON.parse(cache[searchTerm]), searchTerm);
@@ -76,6 +98,12 @@ function parse(html) {
 				} catch (e) {
 					site.category = ''
 				}
+
+				if(categoryIsRTL(site.category))
+					site.dir = 'rtl'
+				else
+					site.dir = 'ltr'
+
 				if (site.title != '') {
 					site.url_title = cleanURL(site.url)
 					site.title_title = site.title + '\n\n' + site.description + '\n\n' + site.category

@@ -2,6 +2,7 @@
 <html>
 <head>
 	<link href="css.css" rel="stylesheet" type="text/css"/>
+	<script src="encoder.js"></script>
 	<script src="jquery.min.js"></script>
 	<script src="underscore-min.js"></script>
 	<script src="js.js"></script>
@@ -10,7 +11,7 @@
 
 	<section class="top">
 		<header>
-			<img src="odphead.png"/> <a href="http://www.dmoz.org/editors/editurl/add?url={currentURL}&cat=Test/" class="underline r">Submit Current Page</a>
+			<img src="odphead.png"/> <a href="http://www.dmoz.org/editors/editurl/add?url={currentURL}&amp;cat=Test/" class="underline r">Submit Current Page</a>
 		</header>
 		<input placeholder="Search for…"/>
 	</section>
@@ -25,9 +26,9 @@
 	</section>
 
 	<section class="template">
-		<section title="{title_title}" class="result">
+		<section title="{title_title}" class="result" dir="{dir}">
 			<div class="title_description"><a href="{url}" class="title" tab="background">{title}</a> - {description}</div>
-			<div class="url">{url_title}</div>
+			<div class="url" dir="ltr">{url_title}</div>
 			<a class="category" href="http://www.dmoz.org/{category}" tab="background">{category}</a>
 		</section>
 	</section>
