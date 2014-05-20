@@ -75,10 +75,13 @@ function search(searchTerm) {
 function parse(html) {
 	var sites = []
 	try {
+		console.log(html);
 		html = html.replace(/<img[^>]+>/g, '').split('<ol')
 		html.shift()
 		html = '<ol' + (html.join('<ol'));
+
 		$(html).find('li').each(function () {
+
 			var site = {}
 			try {
 				var link = $($(this).find('a[href^="http"]').get(0))
@@ -89,12 +92,12 @@ function parse(html) {
 				}
 				site.title = link.text().trim()
 				try {
-					site.description = $('<span>' + (link.parent().html().split('</a>')[2]) + '</span>').text().replace(/^\s*-\s/, '').split('--')[0].trim()
+					site.description = $('<span>' + (link.parent().html().split('</a>')[1]) + '</span>').text().replace(/^\s*-\s/, '').split('--')[0].trim()
 				} catch (e) {
 					site.description = '';
 				}
 				try {
-					site.category = $($(this).find('a').get(2)).text().trim().replace(/\s*\:\s*/g, '/').replace(/\s/g, '_')
+					site.category = $($(this).find('a').get(1)).text().trim().replace(/\s*\:\s*/g, '/').replace(/\s/g, '_')
 				} catch (e) {
 					site.category = ''
 				}
