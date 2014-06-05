@@ -16,6 +16,7 @@ function categoryIsRTL(aCategory) {
 	else
 		return false;
 }
+
 function openURL(url, selected) {
 
 	if (url.indexOf("http://") === 0 || url.indexOf("https://") === 0) {
@@ -40,19 +41,20 @@ function cleanURL(aString) {
 }
 
 Encoder.EncodeType = "numerical";
+
 function searchBug(aString) {
 	return Encoder.htmlEncode(aString);
 }
 
 var version = new Date().getDay()
-if(localStorage['extension-version'] != version) {
+if (localStorage['extension-version'] != version) {
 	localStorage.clear();
 	localStorage['extension-version'] = version
 }
 
 var cache = localStorage;
 
-function search(searchTerm) {
+function search(searchTerm, sites) {
 
 	searchTerm = cleanSearchTerm(searchTerm);
 	if (cache[searchTerm]) {
@@ -64,23 +66,21 @@ function search(searchTerm) {
 			type: 'GET',
 			dataType: 'html',
 			url: 'http://www.dmoz.org/search?q=' + encodeURIComponent(searchBug(searchTerm)),
-			success: function (aData) {
-				cache[searchTerm] = JSON.stringify(parse(aData));
+			success: function(aData) {
+				cache[searchTerm] = JSON.stringify(parse(aData, sites));
 				popup(JSON.parse(cache[searchTerm]), searchTerm);
 			}
 		});
 	}
 }
 
-function parse(html) {
-	var sites = []
+function parse(html, sites) {
 	try {
-		console.log(html);
 		html = html.replace(/<img[^>]+>/g, '').split('<ol')
 		html.shift()
 		html = '<ol' + (html.join('<ol'));
 
-		$(html).find('li').each(function () {
+		$(html).find('li').each(function() {
 
 			var site = {}
 			try {
@@ -102,7 +102,7 @@ function parse(html) {
 					site.category = ''
 				}
 
-				if(categoryIsRTL(site.category))
+				if (categoryIsRTL(site.category))
 					site.dir = 'rtl'
 				else
 					site.dir = 'ltr'
@@ -115,18 +115,22 @@ function parse(html) {
 			} catch (e) {}
 		});
 	} catch (e) {}
+
+	sites = _.uniq(sites, function(item) {
+		return item.url + item.category;
+	})
 	return sites;
 }
 
 function popup(sites, searchTerm) {
 
-	if (sites.length == 0 && searchTerm.indexOf('/') != -1) {
+	if (sites.length < 10 && searchTerm.indexOf('/') != -1) {
 
 		searchTerm = searchTerm.split('/')
 		searchTerm.pop()
 		searchTerm = cleanSearchTerm(searchTerm.join('/'))
 		$('input').val(searchTerm)
-		search(searchTerm)
+		search(searchTerm, sites)
 
 	} else {
 
@@ -141,6 +145,7 @@ function popup(sites, searchTerm) {
 			for (var id in sites) {
 				$('.results').append(template(sites[id]))
 			}
+
 		} else {
 			$('.results').append('<b>No results</b>');
 		}
@@ -152,28 +157,28 @@ function popup(sites, searchTerm) {
 	}
 }
 
-window.onload = function () {
+window.onload = function() {
 	var currentURL = ''
 
-	chrome.windows.getCurrent(function (win) {
-		chrome.tabs.getSelected(win.id, function (tab) {
+	chrome.windows.getCurrent(function(win) {
+		chrome.tabs.getSelected(win.id, function(tab) {
 			currentURL = tab.url;
 
-			$('body').click(function (e) {
+			$('body').click(function(e) {
 				var tag = $($(e.target).prop("tagName") == 'A' ? e.target : $(e.target).parents('a').get(0))
 				if (tag.prop("tagName") == 'A')
 					openURL(tag.attr('href').replace('{currentURL}', encodeURIComponent(currentURL)), tag.attr('tab') != 'background');
 			});
 
-			$('input').keypress(function (e) {
+			$('input').keypress(function(e) {
 				if (e.keyCode == 13) {
-					search($('input').val());
+					search($('input').val(), []);
 				}
 			});
 
 			if (currentURL.indexOf('http') === 0) {
 				$('input').val(cleanSearchTerm(currentURL))
-				search(currentURL)
+				search(currentURL, [])
 			}
 			$('input').focus()
 
